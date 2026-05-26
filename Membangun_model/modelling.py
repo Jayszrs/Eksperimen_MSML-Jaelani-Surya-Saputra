@@ -19,6 +19,7 @@ PREDICTIONS_PATH = ARTIFACT_DIR / "test_predictions.csv"
 
 def _dataset_dir() -> Path:
     candidates = [
+        MODEL_DIR / "breast_cancer_preprocessing",
         PROJECT_ROOT / "breast_cancer_preprocessing",
         PROJECT_ROOT / "preprocessing" / "breast_cancer_preprocessing",
     ]

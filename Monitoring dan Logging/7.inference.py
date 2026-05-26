@@ -12,7 +12,11 @@ import pandas as pd
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 MODEL_DIR = PROJECT_ROOT / "Membangun_model"
 MODEL_PATH = MODEL_DIR / "artifacts" / "breast_cancer_model.joblib"
-DEFAULT_INPUT_PATH = PROJECT_ROOT / "breast_cancer_preprocessing" / "test_preprocessed.csv"
+DEFAULT_INPUT_CANDIDATES = [
+    MODEL_DIR / "breast_cancer_preprocessing" / "test_preprocessed.csv",
+    PROJECT_ROOT / "breast_cancer_preprocessing" / "test_preprocessed.csv",
+    PROJECT_ROOT / "preprocessing" / "breast_cancer_preprocessing" / "test_preprocessed.csv",
+]
 
 
 def ensure_model_exists() -> None:
@@ -47,10 +51,18 @@ def run_inference(input_path: Path, rows: int) -> list[dict[str, object]]:
     return result
 
 
+def default_input_path() -> Path:
+    for candidate in DEFAULT_INPUT_CANDIDATES:
+        if candidate.exists():
+            return candidate
+    raise FileNotFoundError("File test_preprocessed.csv tidak ditemukan.")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Inference model klasifikasi Breast Cancer.")
-    parser.add_argument("--input", type=Path, default=DEFAULT_INPUT_PATH)
+    parser.add_argument("--input", type=Path, default=None)
     parser.add_argument("--rows", type=int, default=5)
     args = parser.parse_args()
 
-    print(json.dumps(run_inference(args.input, args.rows), indent=2))
+    input_path = args.input if args.input is not None else default_input_path()
+    print(json.dumps(run_inference(input_path, args.rows), indent=2))

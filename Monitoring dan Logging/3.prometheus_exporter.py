@@ -14,8 +14,11 @@ from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_sc
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 MODEL_DIR = PROJECT_ROOT / "Membangun_model"
 MODEL_PATH = MODEL_DIR / "artifacts" / "breast_cancer_model.joblib"
-DATA_DIR = PROJECT_ROOT / "breast_cancer_preprocessing"
-TEST_DATA_PATH = DATA_DIR / "test_preprocessed.csv"
+TEST_DATA_CANDIDATES = [
+    MODEL_DIR / "breast_cancer_preprocessing" / "test_preprocessed.csv",
+    PROJECT_ROOT / "breast_cancer_preprocessing" / "test_preprocessed.csv",
+    PROJECT_ROOT / "preprocessing" / "breast_cancer_preprocessing" / "test_preprocessed.csv",
+]
 
 MODEL_ACCURACY = Gauge("model_accuracy", "Current model accuracy on test data")
 MODEL_PRECISION = Gauge("model_precision", "Current model precision on test data")
@@ -35,10 +38,17 @@ def ensure_model_exists() -> None:
     train_model()
 
 
+def test_data_path() -> Path:
+    for candidate in TEST_DATA_CANDIDATES:
+        if candidate.exists():
+            return candidate
+    raise FileNotFoundError("File test_preprocessed.csv tidak ditemukan.")
+
+
 def update_metrics() -> dict[str, float]:
     ensure_model_exists()
     model = joblib.load(MODEL_PATH)
-    test_df = pd.read_csv(TEST_DATA_PATH)
+    test_df = pd.read_csv(test_data_path())
     X_test = test_df.drop(columns=["target"])
     y_test = test_df["target"]
 
