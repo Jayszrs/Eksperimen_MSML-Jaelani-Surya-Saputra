@@ -1,0 +1,14 @@
+{
+  "best_params": {
+    "max_depth": 8,
+    "min_samples_leaf": 1,
+    "min_samples_split": 2,
+    "n_estimators": 100
+  },
+  "best_cv_f1": 0.9737278310076448,
+  "test_accuracy": 0.9473684210526315,
+  "test_precision": 0.9583333333333334,
+  "test_recall": 0.9583333333333334,
+  "test_f1_score": 0.9583333333333334,
+  "test_roc_auc": 0.9940476190476191
+}

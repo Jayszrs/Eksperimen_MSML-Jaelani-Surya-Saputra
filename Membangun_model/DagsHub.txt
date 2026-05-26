@@ -1,0 +1,2 @@
+DagsHub tidak digunakan pada versi submission ini.
+Jika menerapkan advanced tracking, ganti isi file ini dengan tautan repository DagsHub yang berisi eksperimen MLflow.
