@@ -6,3 +6,5 @@ mlruns/
 .env
 .venv/
 venv/
+SUBMISSION_FINAL/
+SUBMISSION_FINAL.zip

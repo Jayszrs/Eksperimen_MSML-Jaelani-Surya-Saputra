@@ -52,29 +52,18 @@ def evaluate_model(model: RandomForestClassifier, X_test: pd.DataFrame, y_test: 
     }
 
 
-def log_to_mlflow(model: RandomForestClassifier, metrics: dict[str, float]) -> None:
+def setup_mlflow_autolog():
     try:
         import mlflow
         import mlflow.sklearn
     except ImportError:
         print("MLflow belum terpasang, artefak lokal tetap disimpan.")
-        return
+        return None
 
     mlflow.set_tracking_uri(f"file:{MODEL_DIR / 'mlruns'}")
     mlflow.set_experiment("breast-cancer-classification")
-    with mlflow.start_run(run_name="random_forest_baseline"):
-        mlflow.log_params(
-            {
-                "model": "RandomForestClassifier",
-                "n_estimators": model.n_estimators,
-                "max_depth": model.max_depth,
-                "random_state": model.random_state,
-            }
-        )
-        mlflow.log_metrics(metrics)
-        mlflow.sklearn.log_model(model, artifact_path="model")
-        mlflow.log_artifact(str(METRICS_PATH))
-        mlflow.log_artifact(str(PREDICTIONS_PATH))
+    mlflow.sklearn.autolog(log_models=True)
+    return mlflow
 
 
 def train_model() -> tuple[RandomForestClassifier, dict[str, float]]:
@@ -86,8 +75,16 @@ def train_model() -> tuple[RandomForestClassifier, dict[str, float]]:
         random_state=42,
         n_jobs=-1,
     )
-    model.fit(X_train, y_train)
-    metrics = evaluate_model(model, X_test, y_test)
+
+    mlflow = setup_mlflow_autolog()
+    if mlflow is None:
+        model.fit(X_train, y_train)
+        metrics = evaluate_model(model, X_test, y_test)
+    else:
+        with mlflow.start_run(run_name="basic_random_forest_autolog"):
+            model.fit(X_train, y_train)
+            metrics = evaluate_model(model, X_test, y_test)
+            mlflow.log_metrics(metrics)
 
     ARTIFACT_DIR.mkdir(exist_ok=True)
     joblib.dump(model, MODEL_PATH)
@@ -99,7 +96,9 @@ def train_model() -> tuple[RandomForestClassifier, dict[str, float]]:
     predictions["benign_probability"] = model.predict_proba(X_test)[:, 1]
     predictions.to_csv(PREDICTIONS_PATH, index=False)
 
-    log_to_mlflow(model, metrics)
+    if mlflow is not None:
+        mlflow.log_artifact(str(METRICS_PATH))
+        mlflow.log_artifact(str(PREDICTIONS_PATH))
     return model, metrics
 
 
